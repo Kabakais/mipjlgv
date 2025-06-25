@@ -3,10 +3,9 @@
   <meta charset="UTF-8">
   <title>معلومات جهازك</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       font-family: 'Tajawal', sans-serif;
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
@@ -14,6 +13,7 @@
       text-align: center;
       padding: 40px;
       direction: rtl;
+      transition: background 0.3s, color 0.3s;
     }
     .card {
       background: rgba(255, 255, 255, 0.1);
@@ -33,23 +33,11 @@
         transform: translateY(0);
       }
     }
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-      text-shadow: 0 0 10px rgba(255,255,255,0.6);
-    }
-    p {
-      font-size: 18px;
-      margin: 12px 0;
-    }
-    iframe {
-      border-radius: 15px;
-      width: 100%;
-      height: 300px;
-      margin-top: 15px;
-    }
+    h1 { font-size: 32px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.6); }
+    p { font-size: 18px; margin: 12px 0; }
+    iframe { border-radius: 15px; width: 100%; height: 300px; margin-top: 15px; }
     button {
-      margin-top: 20px;
+      margin: 10px 5px;
       padding: 10px 20px;
       border: none;
       border-radius: 10px;
@@ -59,115 +47,127 @@
       cursor: pointer;
       transition: 0.3s;
     }
-    button:hover {
-      background-color: #0088aa;
-    }
-    #clock {
-      margin-top: 10px;
-      font-size: 20px;
-      font-weight: bold;
-    }
+    button:hover { background-color: #0088aa; }
+    #clock { margin-top: 10px; font-size: 20px; font-weight: bold; }
     #image-preview {
       margin-top: 20px;
       max-width: 100%;
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(255,255,255,0.3);
     }
+    #bg-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .dark-mode {
+      background: #111;
+      color: #eee;
+    }
   </style>
 </head>
 <body>
   <h1>🔍 معلومات جهازك بالتفصيل</h1>
-  <div class="card" id="info">
-    <p>جاري التحميل...</p>
-  </div>
-  <button onclick="copyInfo()">📋 نسخ جميع المعلومات</button>
+  <img id="bg-image" src="" alt="صورة خلفية">
+  <div class="card" id="info"><p>جاري التحميل...</p></div>
+  <button onclick="copyInfo()">📋 نسخ</button>
+  <button onclick="downloadPDF()">📄 تحميل PDF</button>
+  <button onclick="shareInfo()">🔗 مشاركة</button>
+  <button onclick="toggleDarkMode()">🌙/☀️ وضع الليل/النهار</button>
   <div id="clock"></div>  <div class="card">
     <h2>📷 رفع صورة من جهازك</h2>
     <input type="file" accept="image/*" onchange="previewImage(event)">
     <img id="image-preview" src="" alt="معاينة الصورة" style="display:none;" />
+  </div>  <div class="card">
+    <h2>🎨 اختر لون الخلفية</h2>
+    <input type="color" onchange="document.body.style.background = this.value">
   </div>  <script>
+    const bgImage = document.getElementById("bg-image");
+    fetch("https://source.unsplash.com/1600x400/?technology").then(r => bgImage.src = r.url);
+
     function updateClock() {
       const now = new Date();
-      document.getElementById('clock').innerText = '🕓 الوقت المحلي: ' + now.toLocaleTimeString('ar-EG');
+      document.getElementById('clock').innerText = '🕓 الوقت: ' + now.toLocaleTimeString('ar-EG');
     }
     setInterval(updateClock, 1000);
     updateClock();
 
     async function getInfo() {
       const infoBox = document.getElementById("info");
-      let ip = "جارٍ التحميل...";
-      let country = city = isp = "جارٍ التحميل...";
+      let ip = city = country = isp = "جارٍ التحميل...";
       let batteryText = "جارٍ التحميل...";
       let coords = null;
-      let network = "غير مدعوم";
+      let connection = navigator.onLine ? "🟢 متصل" : "🔴 غير متصل";
+      let speed = "جارٍ التقدير...";
 
       try {
-        const ipRes = await fetch("https://ipapi.co/json/");
-        const ipData = await ipRes.json();
-        ip = ipData.ip;
-        country = ipData.country_name;
-        city = ipData.city;
-        isp = ipData.org;
-      } catch {
-        ip = country = city = isp = "تعذر الجلب";
-      }
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        ip = data.ip;
+        country = data.country_name;
+        city = data.city;
+        isp = data.org;
+      } catch {}
 
       try {
         const battery = await navigator.getBattery();
-        batteryText = `${Math.round(battery.level * 100)}% ${battery.charging ? '(يتم الشحن)' : ''}`;
-      } catch {
-        batteryText = "غير مدعومة في هذا المتصفح";
-      }
+        batteryText = `${Math.round(battery.level * 100)}% ${battery.charging ? '(يُشحن)' : ''}`;
+      } catch {}
 
-      try {
-        network = navigator.connection.effectiveType || "غير معروف";
-      } catch {
-        network = "غير مدعوم";
-      }
-
-      let locationText = "جاري التحميل...";
+      let locationText = "غير متاح";
       let map = "";
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-          const { latitude, longitude } = position.coords;
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
           coords = { latitude, longitude };
           locationText = `خط العرض: ${latitude.toFixed(4)}, خط الطول: ${longitude.toFixed(4)}`;
           map = `<iframe src="https://maps.google.com/maps?q=${latitude},${longitude}&hl=ar&z=14&output=embed"></iframe>`;
-          showInfo();
-        }, () => {
-          locationText = "تم رفض الوصول إلى الموقع أو غير متاح.";
-          showInfo();
-        });
+          show();
+        }, () => { show(); });
       } else {
-        locationText = "المتصفح لا يدعم تحديد الموقع.";
-        showInfo();
+        show();
       }
 
-      function showInfo() {
+      function show() {
+        const network = navigator.connection?.effectiveType || "غير معروف";
         infoBox.innerHTML = `
-          <p><strong>💡 عنوان IP:</strong> ${ip}</p>
-          <p><strong>🌍 الدولة:</strong> ${country}</p>
+          <p><strong>💡 IP:</strong> ${ip}</p>
           <p><strong>🏙️ المدينة:</strong> ${city}</p>
+          <p><strong>🌍 الدولة:</strong> ${country}</p>
           <p><strong>🛰️ مزود الخدمة:</strong> ${isp}</p>
           <p><strong>📱 نوع الجهاز:</strong> ${navigator.platform}</p>
           <p><strong>🌐 المتصفح:</strong> ${navigator.userAgent}</p>
-          <p><strong>🔋 حالة البطارية:</strong> ${batteryText}</p>
+          <p><strong>🔋 البطارية:</strong> ${batteryText}</p>
           <p><strong>📶 نوع الشبكة:</strong> ${network}</p>
-          <p><strong>📍 الموقع الجغرافي:</strong> ${locationText}</p>
+          <p><strong>📡 الاتصال:</strong> ${connection}</p>
+          <p><strong>📍 الموقع:</strong> ${locationText}</p>
           ${map}
         `;
+        new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_75d15a11dc.mp3?filename=tap-click-110180.mp3").play();
       }
     }
+    getInfo();
 
     function copyInfo() {
-      const text = document.getElementById("info").innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        alert("✅ تم نسخ البيانات بنجاح!");
-      });
+      navigator.clipboard.writeText(document.getElementById("info").innerText).then(() => alert("✅ تم النسخ"));
     }
 
-    function previewImage(event) {
-      const file = event.target.files[0];
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text(document.getElementById("info").innerText, 10, 10);
+      doc.save("info.pdf");
+    }
+
+    function shareInfo() {
+      const text = encodeURIComponent(document.getElementById("info").innerText);
+      window.open(`https://wa.me/?text=${text}`);
+    }
+
+    function previewImage(e) {
+      const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
         const img = document.getElementById("image-preview");
@@ -177,6 +177,8 @@
       reader.readAsDataURL(file);
     }
 
-    getInfo();
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
   </script></body>
 </html>
