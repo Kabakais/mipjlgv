@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>معلومات جهازك وموقعك</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: 'Cairo', sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    .card {
+      background: #222;
+      border-radius: 20px;
+      box-shadow: 0 0 15px white;
+      padding: 30px;
+      width: 320px;
+      margin: auto;
+    }
+    h1 {
+      color: #0ff;
+    }
+    p {
+      font-size: 18px;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>معلومات عن جهازك</h1>
+    <p><strong>عنوان IP:</strong> <span id="ip">جارٍ التحميل...</span></p>
+    <p><strong>نوع الجهاز:</strong> <span id="device">جارٍ التحميل...</span></p>
+    <hr style="margin: 15px 0; border: 1px solid #444;">
+    <h2>موقعك التقريبي</h2>
+    <p><strong>الدولة:</strong> <span id="country">...</span></p>
+    <p><strong>المدينة:</strong> <span id="city">...</span></p>
+    <p><strong>مزود الخدمة:</strong> <span id="isp">...</span></p>
+  </div>
+
+  <script>
+    // نوع الجهاز
+    const userAgent = navigator.userAgent;
+    function detectDevice(ua) {
+      if (/android/i.test(ua)) return "هاتف أندرويد";
+      if (/iPhone|iPad|iPod/i.test(ua)) return "جهاز آيفون أو آيباد";
+      if (/windows/i.test(ua)) return "جهاز Windows";
+      if (/macintosh/i.test(ua)) return "جهاز Mac";
+      if (/linux/i.test(ua)) return "جهاز Linux";
+      return "غير معروف";
+    }
+    document.getElementById('device').textContent = detectDevice(userAgent);
+
+    // معلومات IP والموقع
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('ip').textContent = data.ip;
+        document.getElementById('country').textContent = `${data.country_name} (${data.country})`;
+        document.getElementById('city').textContent = data.city;
+        document.getElementById('isp').textContent = data.org || "غير معروف";
+      })
+      .catch(() => {
+        document.getElementById('ip').textContent = "فشل في التحميل";
+        document.getElementById('country').textContent = "غير متاح";
+        document.getElementById('city').textContent = "غير متاح";
+        document.getElementById('isp').textContent = "غير متاح";
+      });
+  </script>
+
+</body>
+</html>
