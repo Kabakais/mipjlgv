@@ -100,7 +100,12 @@
       let batteryText = "جارٍ التحميل...";
       let coords = null;
       let connection = navigator.onLine ? "🟢 متصل" : "🔴 غير متصل";
-      let speed = "جارٍ التقدير...";
+      let map = "";
+      let orientation = screen.orientation?.type || "غير معروف";
+      let resolution = `${screen.width}x${screen.height}`;
+      let cpuCores = navigator.hardwareConcurrency || "غير معروف";
+      let deviceInput = ('ontouchstart' in window) ? "📱 لمس" : "🖱️ فأرة/لوحة مفاتيح";
+      let gamepads = navigator.getGamepads?.().filter(g => g).length || 0;
 
       try {
         const res = await fetch("https://ipapi.co/json/");
@@ -117,7 +122,6 @@
       } catch {}
 
       let locationText = "غير متاح";
-      let map = "";
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
           const { latitude, longitude } = pos.coords;
@@ -142,6 +146,11 @@
           <p><strong>🔋 البطارية:</strong> ${batteryText}</p>
           <p><strong>📶 نوع الشبكة:</strong> ${network}</p>
           <p><strong>📡 الاتصال:</strong> ${connection}</p>
+          <p><strong>🧱 دقة الشاشة:</strong> ${resolution}</p>
+          <p><strong>🔁 اتجاه الشاشة:</strong> ${orientation}</p>
+          <p><strong>🧠 عدد أنوية المعالج:</strong> ${cpuCores}</p>
+          <p><strong>🖲️ نوع الإدخال:</strong> ${deviceInput}</p>
+          <p><strong>🎮 أدوات ألعاب متصلة:</strong> ${gamepads}</p>
           <p><strong>📍 الموقع:</strong> ${locationText}</p>
           ${map}
         `;
