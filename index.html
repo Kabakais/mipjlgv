@@ -67,6 +67,12 @@
       font-size: 20px;
       font-weight: bold;
     }
+    #image-preview {
+      margin-top: 20px;
+      max-width: 100%;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
   </style>
 </head>
 <body>
@@ -75,7 +81,11 @@
     <p>جاري التحميل...</p>
   </div>
   <button onclick="copyInfo()">📋 نسخ جميع المعلومات</button>
-  <div id="clock"></div>  <script>
+  <div id="clock"></div>  <div class="card">
+    <h2>📷 رفع صورة من جهازك</h2>
+    <input type="file" accept="image/*" onchange="previewImage(event)">
+    <img id="image-preview" src="" alt="معاينة الصورة" style="display:none;" />
+  </div>  <script>
     function updateClock() {
       const now = new Date();
       document.getElementById('clock').innerText = '🕓 الوقت المحلي: ' + now.toLocaleTimeString('ar-EG');
@@ -154,6 +164,17 @@
       navigator.clipboard.writeText(text).then(() => {
         alert("✅ تم نسخ البيانات بنجاح!");
       });
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = document.getElementById("image-preview");
+        img.src = reader.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(file);
     }
 
     getInfo();
