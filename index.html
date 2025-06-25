@@ -2,62 +2,104 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>معلومات جهازك</title>
+  <title>معلومات جهازك المتقدمة</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Tahoma', sans-serif;
+      background: linear-gradient(to right, #141e30, #243b55);
+      color: #fff;
       text-align: center;
       padding: 50px;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
     }
     .card {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.1);
       border-radius: 20px;
       padding: 30px;
-      box-shadow: 0 0 30px rgba(255,255,255,0.2);
-      display: inline-block;
       margin-top: 30px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+      display: inline-block;
+      text-align: left;
     }
-    h2 {
-      font-size: 30px;
+    h1 {
+      font-size: 32px;
       margin-bottom: 20px;
     }
     p {
-      font-size: 20px;
+      font-size: 18px;
       margin: 10px 0;
     }
   </style>
 </head>
 <body>
-  <h1>معلومات جهازك 👇</h1>
+  <h1>📱 معلومات جهازك المتقدمة</h1>
   <div class="card" id="info">
-    <h2>جارٍ التحميل...</h2>
+    <p>جاري التحميل...</p>
   </div>
 
   <script>
-    async function fetchIPAndInfo() {
-      const infoBox = document.getElementById('info');
+    async function getDeviceInfo() {
+      const infoDiv = document.getElementById("info");
+
+      // IP
+      let ip = "جارٍ التحميل...";
       try {
-        const res = await fetch('https://api.ipify.org?format=json');
+        const res = await fetch("https://api.ipify.org?format=json");
         const data = await res.json();
-        const ip = data.ip;
-
-        const userAgent = navigator.userAgent;
-        const platform = navigator.platform;
-
-        infoBox.innerHTML = `
-          <h2>تم الحصول على البيانات ✅</h2>
-          <p><strong>IP الخارجي:</strong> ${ip}</p>
-          <p><strong>نظام التشغيل:</strong> ${platform}</p>
-          <p><strong>المتصفح:</strong> ${userAgent}</p>
-        `;
-      } catch (err) {
-        infoBox.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات ❌</p>";
+        ip = data.ip;
+      } catch (e) {
+        ip = "فشل في الحصول على IP";
       }
+
+      // User Agent
+      const userAgent = navigator.userAgent;
+      const platform = navigator.platform;
+
+      // Battery Info
+      let batteryText = "جارٍ التحميل...";
+      try {
+        const battery = await navigator.getBattery();
+        const level = Math.round(battery.level * 100);
+        batteryText = `${level}% ${battery.charging ? "(يتم الشحن)" : ""}`;
+      } catch {
+        batteryText = "غير مدعومة في هذا المتصفح";
+      }
+
+      // Location
+      let locationText = "جارٍ التحميل...";
+      function geoSuccess(position) {
+        const { latitude, longitude } = position.coords;
+        locationText = `خط العرض: ${latitude.toFixed(4)}, خط الطول: ${longitude.toFixed(4)}`;
+        updateDisplay();
+      }
+      function geoError() {
+        locationText = "الموقع غير متاح أو تم رفض الإذن.";
+        updateDisplay();
+      }
+
+      // عرض البيانات
+      function updateDisplay() {
+        infoDiv.innerHTML = `
+          <p><strong>💡 عنوان IP:</strong> ${ip}</p>
+          <p><strong>🧠 نظام التشغيل:</strong> ${platform}</p>
+          <p><strong>🌐 المتصفح / الجهاز:</strong> ${userAgent}</p>
+          <p><strong>🔋 نسبة البطارية:</strong> ${batteryText}</p>
+          <p><strong>📍 الموقع الجغرافي:</strong> ${locationText}</p>
+        `;
+      }
+
+      // طلب الموقع
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(geoSuccess, geoError);
+      } else {
+        locationText = "المتصفح لا يدعم الموقع الجغرافي.";
+        updateDisplay();
+      }
+
+      // عرض مبدئي (بدون الموقع)
+      updateDisplay();
     }
 
-    fetchIPAndInfo();
+    getDeviceInfo();
   </script>
 </body>
 </html>
