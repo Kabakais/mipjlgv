@@ -2,74 +2,62 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>معلومات جهازك وموقعك</title>
+  <title>معلومات جهازك</title>
   <style>
     body {
-      background-color: #111;
-      color: white;
-      font-family: 'Cairo', sans-serif;
+      font-family: 'Arial', sans-serif;
       text-align: center;
-      padding-top: 50px;
+      padding: 50px;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
     }
     .card {
-      background: #222;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
-      box-shadow: 0 0 15px white;
       padding: 30px;
-      width: 320px;
-      margin: auto;
+      box-shadow: 0 0 30px rgba(255,255,255,0.2);
+      display: inline-block;
+      margin-top: 30px;
     }
-    h1 {
-      color: #0ff;
+    h2 {
+      font-size: 30px;
+      margin-bottom: 20px;
     }
     p {
-      font-size: 18px;
-      margin: 8px 0;
+      font-size: 20px;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <h1>معلومات عن جهازك</h1>
-    <p><strong>عنوان IP:</strong> <span id="ip">جارٍ التحميل...</span></p>
-    <p><strong>نوع الجهاز:</strong> <span id="device">جارٍ التحميل...</span></p>
-    <hr style="margin: 15px 0; border: 1px solid #444;">
-    <h2>موقعك التقريبي</h2>
-    <p><strong>الدولة:</strong> <span id="country">...</span></p>
-    <p><strong>المدينة:</strong> <span id="city">...</span></p>
-    <p><strong>مزود الخدمة:</strong> <span id="isp">...</span></p>
+  <h1>معلومات جهازك 👇</h1>
+  <div class="card" id="info">
+    <h2>جارٍ التحميل...</h2>
   </div>
 
   <script>
-    // نوع الجهاز
-    const userAgent = navigator.userAgent;
-    function detectDevice(ua) {
-      if (/android/i.test(ua)) return "هاتف أندرويد";
-      if (/iPhone|iPad|iPod/i.test(ua)) return "جهاز آيفون أو آيباد";
-      if (/windows/i.test(ua)) return "جهاز Windows";
-      if (/macintosh/i.test(ua)) return "جهاز Mac";
-      if (/linux/i.test(ua)) return "جهاز Linux";
-      return "غير معروف";
+    async function fetchIPAndInfo() {
+      const infoBox = document.getElementById('info');
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        const ip = data.ip;
+
+        const userAgent = navigator.userAgent;
+        const platform = navigator.platform;
+
+        infoBox.innerHTML = `
+          <h2>تم الحصول على البيانات ✅</h2>
+          <p><strong>IP الخارجي:</strong> ${ip}</p>
+          <p><strong>نظام التشغيل:</strong> ${platform}</p>
+          <p><strong>المتصفح:</strong> ${userAgent}</p>
+        `;
+      } catch (err) {
+        infoBox.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات ❌</p>";
+      }
     }
-    document.getElementById('device').textContent = detectDevice(userAgent);
 
-    // معلومات IP والموقع
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('ip').textContent = data.ip;
-        document.getElementById('country').textContent = `${data.country_name} (${data.country})`;
-        document.getElementById('city').textContent = data.city;
-        document.getElementById('isp').textContent = data.org || "غير معروف";
-      })
-      .catch(() => {
-        document.getElementById('ip').textContent = "فشل في التحميل";
-        document.getElementById('country').textContent = "غير متاح";
-        document.getElementById('city').textContent = "غير متاح";
-        document.getElementById('isp').textContent = "غير متاح";
-      });
+    fetchIPAndInfo();
   </script>
-
 </body>
 </html>
