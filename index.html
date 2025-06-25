@@ -4,6 +4,9 @@
   <title>معلومات جهازك</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Tajawal', sans-serif;
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
@@ -18,8 +21,17 @@
       padding: 30px;
       box-shadow: 0 0 30px rgba(255,255,255,0.2);
       margin: auto;
-      max-width: 600px;
+      max-width: 700px;
       margin-top: 20px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeIn 1s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     h1 {
       font-size: 32px;
@@ -36,19 +48,48 @@
       height: 300px;
       margin-top: 15px;
     }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #00c9ff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #0088aa;
+    }
+    #clock {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h1>🔍 معلومات جهازك بالتفصيل</h1>
   <div class="card" id="info">
     <p>جاري التحميل...</p>
-  </div>  <script>
+  </div>
+  <button onclick="copyInfo()">📋 نسخ جميع المعلومات</button>
+  <div id="clock"></div>  <script>
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').innerText = '🕓 الوقت المحلي: ' + now.toLocaleTimeString('ar-EG');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
     async function getInfo() {
       const infoBox = document.getElementById("info");
       let ip = "جارٍ التحميل...";
       let country = city = isp = "جارٍ التحميل...";
       let batteryText = "جارٍ التحميل...";
       let coords = null;
+      let network = "غير مدعوم";
 
       try {
         const ipRes = await fetch("https://ipapi.co/json/");
@@ -66,6 +107,12 @@
         batteryText = `${Math.round(battery.level * 100)}% ${battery.charging ? '(يتم الشحن)' : ''}`;
       } catch {
         batteryText = "غير مدعومة في هذا المتصفح";
+      }
+
+      try {
+        network = navigator.connection.effectiveType || "غير معروف";
+      } catch {
+        network = "غير مدعوم";
       }
 
       let locationText = "جاري التحميل...";
@@ -95,10 +142,18 @@
           <p><strong>📱 نوع الجهاز:</strong> ${navigator.platform}</p>
           <p><strong>🌐 المتصفح:</strong> ${navigator.userAgent}</p>
           <p><strong>🔋 حالة البطارية:</strong> ${batteryText}</p>
+          <p><strong>📶 نوع الشبكة:</strong> ${network}</p>
           <p><strong>📍 الموقع الجغرافي:</strong> ${locationText}</p>
           ${map}
         `;
       }
+    }
+
+    function copyInfo() {
+      const text = document.getElementById("info").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ تم نسخ البيانات بنجاح!");
+      });
     }
 
     getInfo();
